@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+
+import subprocess
+import os
+import time
+import tkinter as tk
+from tkinter import ttk, messagebox
+
+def get_wireless_interface():
+    result = subprocess.run(['iw', 'dev'], capture_output=True, text=True)
+    lines = result.stdout.split('\n')
+    interface = None
+
+    for line in lines:
+        if 'Interface' in line:
+            interface = line.split()[1]
+            break
+
+    if not interface:
+        raise RuntimeError("Nenhuma interface de rede sem fio encontrada.")
+    
+    return interface
+
+def scan_networks(interface):
+    result = subprocess.run(['sudo', 'iwlist', interface, 'scan'], capture_output=True, text=True)
+    lines = result.stdout.split('\n')
+    networks = []
+    network = {}
+    
+    for line in lines:
+        if 'Cell' in line:
+            if network:
+                networks.append(network)
+                network = {}
+        if 'ESSID:' in line:
+            network['ESSID'] = line.split(':')[1].strip().strip('"')
+        if 'Address:' in line:
+            network['BSSID'] = line.split()[4]
+        if 'Channel:' in line:
+            network['Channel'] = line.split(':')[1].strip()
+    
+    if network:
+        networks.append(network)
+    
+    return networks
+
+def start_capture(interface, network_bssid, channel, file_name):
+    # Iniciar o modo monitor na interface de rede sem fio
+    subprocess.run(["sudo", "airmon-ng", "start", interface])
+    
+    # Iniciar airodump-ng para capturar dispositivos conectados à rede escolhida
+    process = subprocess.Popen(["airodump-ng", "-c", channel, "--bssid", network_bssid, "-w", file_name, f"{interface}mon", "--ignore-negative-one"])
+    
+    try:
+        # Esperar até que o arquivo seja capturado com sucesso
+        while True:
+            if os.path.exists(file_name + "-01.cap"):
+                break
+            time.sleep(1)  # Espera 1 segundo antes de verificar novamente
+    finally:
+        # Parar o processo de captura de rede
+        process.terminate()
+        process.wait()
+
+        # Parar o modo monitor na interface de rede sem fio
+        subprocess.run(["sudo", "airmon-ng", "stop", f"{interface}mon"])
+
+def on_start_button_click(interface, networks, essid_var, file_name_var):
+    selected_network = essid_var.get()
+    file_name = file_name_var.get()
+
+    if not selected_network or not file_name:
+        messagebox.showerror("Erro", "Por favor, selecione uma rede e insira o nome do arquivo.")
+        return
+
+    network = next((net for net in networks if net['ESSID'] == selected_network), None)
+    if not network:
+        messagebox.showerror("Erro", "Rede selecionada não encontrada.")
+        return
+
+    start_capture(interface, network['BSSID'], network['Channel'], file_name)
+
+def main():
+    # Obter a interface de rede sem fio
+    interface = get_wireless_interface()
+    
+    # Escanear redes disponíveis
+    networks = scan_networks(interface)
+    
+    # Interface gráfica
+    root = tk.Tk()
+    root.title("Captura de Rede Wi-Fi")
+
+    essid_var = tk.StringVar()
+    file_name_var = tk.StringVar()
+
+    frame = ttk.Frame(root, padding="10")
+    frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+    ttk.Label(frame, text="Selecione a rede Wi-Fi:").grid(column=0, row=0, sticky=tk.W)
+    essid_combobox = ttk.Combobox(frame, textvariable=essid_var, state="readonly")
+    essid_combobox['values'] = [net['ESSID'] for net in networks]
+    essid_combobox.grid(column=1, row=0, sticky=(tk.W, tk.E))
+
+    ttk.Label(frame, text="Nome do arquivo de saída:").grid(column=0, row=1, sticky=tk.W)
+    ttk.Entry(frame, textvariable=file_name_var).grid(column=1, row=1, sticky=(tk.W, tk.E))
+
+    ttk.Button(frame, text="Iniciar Captura", command=lambda: on_start_button_click(interface, networks, essid_var, file_name_var)).grid(column=1, row=2, sticky=tk.E)
+
+    root.mainloop()
+
+if __name__ == '__main__':
+    main()
