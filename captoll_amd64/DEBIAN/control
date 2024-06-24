@@ -1,8 +1,0 @@
-Package: captool
-Version: 1.0
-Section: base
-Priority: optional
-Architecture: all
-Depends: python3
-Maintainer: Gabriel Sousa <contato@gabrielsousa.dev>
-Description: 'captool! > captool_amd64/DEBIAN/control

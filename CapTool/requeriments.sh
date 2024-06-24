@@ -16,6 +16,9 @@ sudo apt-get install -y iw
 # Instala aircrack-ng para captura de pacotes Wi-Fi
 sudo apt-get install -y aircrack-ng
 
+# Instala John the Ripper para quebra de senhas
+sudo apt-get install -y john
+
 # Instala outras ferramentas úteis (opcional)
 sudo apt-get install -y git vim
 

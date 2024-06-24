@@ -1,0 +1,9 @@
+Package: captool
+Version: 1.0
+Section: base
+Priority: optional
+Architecture: all
+Depends: python3, aircrack-ng
+Maintainer: Gabriel Sousa <contato@gabrielsousa.dev>
+Description: Ferramenta de captura e quebra de senha Wi-Fi
+ Uma ferramenta para capturar pacotes Wi-Fi e tentar quebrar senhas usando aircrack-ng.
