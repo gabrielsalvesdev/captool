@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -e
+
+# Função para configurar permissões e links simbólicos
+configure_wifi_tool() {
+    # Configurar permissões necessárias
+    chmod +x /usr/bin/wifi_capture_gui.py
+    chmod +x /usr/bin/wifi_capture.sh
+
+    # Criar link simbólico para captool, suprimindo erro caso o link já exista
+    ln -sf /usr/bin/wifi_capture_gui.py /usr/local/bin/captool
+
+    # Configurar programa para iniciar como root
+    chown root:root /usr/bin/wifi_capture_gui.py
+    chmod u+s /usr/bin/wifi_capture_gui.py
+}
+
+# Executar configuração apenas durante a instalação do pacote
+case "$1" in
+    configure)
+        echo "Configurando my_wifi_tool..."
+        configure_wifi_tool
+
+        # Atualizar o cache de ícones (opcional)
+        update-icon-caches /usr/share/icons/*
+
+        # Atualizar o banco de dados de desktop (opcional)
+        update-desktop-database
+
+        ;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+    *)
+        echo "script $0 chamado com argumento desconhecido \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

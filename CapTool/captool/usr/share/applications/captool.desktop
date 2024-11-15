@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=CapTool
+Comment=Ferramenta captool para captura de rede Wi-Fi
+Exec=sudo /usr/local/bin/captool
+Icon=captool-icon
+Terminal=false
+Type=Application
+Categories=Network;

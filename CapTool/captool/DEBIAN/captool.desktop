@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=CapTool
+Comment=Ferramenta captool para captura de rede Wi-Fi
+Exec=/usr/bin/wifi_capture_gui.py
+Icon=/usr/share/icons/captool-icon.png
+Terminal=false
+Type=Application
+Categories=Network;
